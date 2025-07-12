@@ -1,9 +1,8 @@
-
-import mongoose, { Document, Schema } from 'mongoose';
+import mongoose, { Document, Schema, Types } from "mongoose";
 
 export interface IMessage extends Document {
-  chatId: mongoose.Schema.Types.ObjectId; // Reference to the chat this message belongs to
-  sender: mongoose.Schema.Types.ObjectId; // Reference to the user who sent the message
+  chatId: Types.ObjectId; // Reference to the chat this message belongs to
+  sender: Types.ObjectId; // Reference to the user who sent the message
   content: string; // The content of the message, can be text or a URL for media
   type: string; // e.g., 'text', 'image', 'file'
   mediaUrl?: string; // URL for media files if type is not 'text'
@@ -11,52 +10,51 @@ export interface IMessage extends Document {
   updatedAt?: Date;
 }
 
-const messageSchema = new Schema<IMessage>({
-  chatId: { type: mongoose.Schema.Types.ObjectId, ref: "Chat" },
-  sender: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-  content: { type: String, trim: true },
-  type: { type: String, enum: ['text', 'image', 'file'], default: 'text' },
-  mediaUrl: { type: String, trim: true, default: '' }, // Optional
+const messageSchema = new Schema<IMessage>(
+  {
+    chatId: { type: mongoose.Schema.Types.ObjectId, ref: "Chat" },
+    sender: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    content: { type: String, trim: true },
+    type: { type: String, enum: ["text", "image", "file"], default: "text" },
+    mediaUrl: { type: String, trim: true, default: "" }, // Optional
   },
   { timestamps: true }
 );
 
-const Message = mongoose.model<IMessage>('Message', messageSchema);
+const Message = mongoose.model<IMessage>("Message", messageSchema);
 
 export default Message;
 
-// Function to create a new message
-// This function saves a new message to the database
-// @param messageData - The data for the new message, including chatId, sender, content, etc.
-// @returns The created message object
-export const createMessage = async (messageData: IMessage) => {
+export type MessageDataType = {
+  chatId: string;
+  sender: string;
+  content: string;
+  type?: string; // Optional, defaults to 'text'
+  mediaUrl?: string; // Optional, for media messages
+};
+
+export const createMessage = async (messageData: MessageDataType) => {
   try {
-    const message = new Message(messageData);
-    await message.save();
+    const message = await Message.create(messageData);
+    // // Update the lastMessage field in the chat
+    // await Chat.findByIdAndUpdate
     return message;
   } catch (error) {
     console.error("Error creating message:", error);
     throw error;
   }
-}
+};
 
-// Function to get messages by chatId
-// This function retrieves messages for a specific chat, populating sender and readBy fields with user\
-// @param chatId - The ID of the chat for which to retrieve messages
-// @returns An array of messages for the specified chat, with sender and readBy fields populated
-interface IGetMessagesByChatIdParams {
-  chatId: mongoose.Schema.Types.ObjectId;
-}
-
-export const getMessagesByChatId = async (
-  chatId: IGetMessagesByChatIdParams['chatId']
-): Promise<IMessage[]> => {
+export const getMessagesByChatId = async (chatId: string) => {
   try {
-    const messages = await Message.find({ chatId })
-      .populate('sender', 'username avatar')
+    const messages = await Message.find({
+      chatId: new mongoose.Types.ObjectId(chatId),
+    })
+      .populate("sender", "-password")
+      .sort({ createdAt: -1 });
     return messages;
   } catch (error) {
     console.error("Error fetching messages:", error);
     throw error;
   }
-}
+};

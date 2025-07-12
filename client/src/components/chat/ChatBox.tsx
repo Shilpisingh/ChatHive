@@ -1,65 +1,120 @@
-import React, { useContext, useState } from "react";
-import socket from '../../socket';
+import React, { useContext, useEffect, useState } from "react";
 import { useAuth } from "../../context/AuthProvider";
+import { ChatType } from "./types";
+import { getMessagesByChatId } from "../../api/chatService";
+import {
+  connectSocket,
+  disconnectSocket,
+  joinChat,
+  offMessageReceived,
+  onMessageReceived,
+  onSendMessage,
+} from "../../socket/socket";
 
-export interface IMessage extends Document {
-  chatId: string; // Reference to the chat this message belongs to
-  sender: string; // Reference to the user who sent the message
-  content: string; // The content of the message, can be text or a URL for media
-  type: string; // e.g., 'text', 'image', 'file'
-}
-
-const ChatBox = () => {
+const ChatBox = ({ chat }: { chat: ChatType }) => {
   const [content, setContent] = useState("");
-  const username = "User"; // Replace with actual username from context or props
-  const { user, loading } = useAuth();
-  
-   const sendMessage = () => {
-    console.log("Sending message:", content);
-    if (!content.trim()) return;
+  const [messages, setMessages] = useState<any[]>([]);
+  const [error, setError] = useState("");
+  const { user } = useAuth();
 
-    socket.emit('send_message', { sender: user, content, type: 'text', chatId: '12345' });
-    setContent('');
+  useEffect(() => {
+    if (!chat || !chat._id) return;
+    connectSocket();
+    joinChat(chat._id);
+
+    onMessageReceived((msg) => {
+      console.log("Message received:========================", msg);
+      setMessages((prev) => [...prev, msg]);
+    });
+
+    return () => {
+      disconnectSocket();
+      offMessageReceived();
+    };
+  }, [chat._id]);
+
+  useEffect(() => {
+    // get messages for the selected chat
+    const fetchMessages = async () => {
+      if (!chat._id) return;
+      // Fetch messages from the server or API
+      const messages = await getMessagesByChatId(chat._id);
+
+      setMessages(messages);
+    };
+    fetchMessages();
+  }, [chat._id]);
+
+  // Function to send a message
+  const sendMessage = () => {
+    console.log("Sending message:", chat._id, content, user);
+    setError("");
+    if (!content.trim()) return;
+    if (!chat._id || !user?.id) {
+      setContent("");
+      setError("something went wrong");
+      return;
+    }
+    const messageData = {
+      chatId: chat._id,
+      sender: user.id,
+      content,
+      type: "text",
+      createdAt: new Date().toISOString(),
+    };
+    // Emit the message to the server
+    onSendMessage(messageData);
+
+    setContent("");
+    setMessages((prevMessages) => [...prevMessages, messageData]);
   };
+
+  if (!chat || !chat.members.length) {
+    return <div className="chat">Select a user to start messaging</div>;
+  }
 
   return (
     <div className="chat">
       <div className="chatInfo">
-        <span>user sjhwefher jhb</span>
+        <span>{chat.members[0]?.username || ""}</span>
         <div className="chatIcons"></div>
       </div>
       <div className="messages">
-        <div className={`message "owner"}`}>
-        <div className="messageInfo">
-          <img src="" alt="" />
-          <span>just now</span>
-        </div>
-        <div className="messageContent">
-          <p>hhhh</p>
-          <img src="" alt="" />
-        </div>
+        {messages.map((message) => (
+          <div
+            className={`message ${message.sender === user?._id ? "owner" : ""}`}
+            key={message._id}
+          >
+            <div className="messageInfo">
+              <img src={message.senderAvatar || ""} alt="" />
+              <span>{new Date(message.createdAt).toLocaleTimeString()}</span>
+            </div>
+            <div className="messageContent">
+              <p>{message.content}</p>
+              {message.type === "image" && (
+                <img src={message.imageUrl} alt="Sent image" />
+              )}
+            </div>
+          </div>
+        ))}
       </div>
-    </div>
-    <div className="input">
-      <input
-        type="text"
-        placeholder="Type something..."
-        value={content}
-        onChange={(e) => setContent(e.target.value)}
-      />
-      <div className="send">
-        <img src="" alt="" />
+      <div className="input">
         <input
-          type="file"
-          style={{ display: "none" }}
-          id="file"
+          type="text"
+          placeholder="Type something..."
+          value={content}
+          onChange={(e) => setContent(e.target.value)}
         />
-        <label htmlFor="file">
-          <img src="" alt="" />
-        </label>
-        <button onClick={sendMessage}>Send</button>
+        <div className="send">
+          {/* <img src="" alt="" />
+          <input type="file" style={{ display: "none" }} id="file" />
+          <label htmlFor="file">
+            <img src="" alt="" />
+          </label>
+          */}
+          <button onClick={sendMessage}>Send</button>
+        </div>
       </div>
-    </div>
     </div>
   );
 };

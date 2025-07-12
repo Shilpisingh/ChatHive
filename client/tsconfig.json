@@ -9,5 +9,5 @@
     "moduleResolution": "node",
     "jsx": "react-jsx"
   },
-  "include": ["frontend/src"]
+  "include": ["src", "src/api"]
 }

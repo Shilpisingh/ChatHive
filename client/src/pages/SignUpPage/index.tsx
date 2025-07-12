@@ -1,73 +1,86 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import {  createUserWithEmailAndPassword, updateProfile  } from 'firebase/auth';
-import { auth } from '../../firebase';
-import './styles.scss'
-import InputField from '../../components/ui/InputField';
-import Button from '../../components/ui/Button';
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import "./styles.scss";
+import InputField from "../../components/ui/InputField";
+import Button from "../../components/ui/Button";
+import { registerUser } from "../../api/userService";
 
 const SignupPage = () => {
   const [formFields, setFormFields] = useState({
-    name: '',
-    email: '',
-    password: ''
+    username: "",
+    email: "",
+    password: "",
   });
-  const [errors, setErrors] = useState({
-    name: '',
-    email: '',
-    password: ''
+  const [formErrors, setFormErrors] = useState({
+    username: "",
+    email: "",
+    password: "",
   });
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const navigate = useNavigate();
 
   const handleChange = (name: string, value: string) => {
     setFormFields((prev) => ({ ...prev, [name]: value }));
+    setFormErrors({ ...formErrors, [name]: "" });
+    setError("");
+    setSuccess("");
   };
 
   const validate = () => {
-    const newErrors = {...errors};
-    if (!formFields.name.length) newErrors.name = 'Please enter name';
-    if (!formFields.email.includes('@')) newErrors.email = 'Please enter valid email';
-    if (formFields.password.length < 6) newErrors.password = 'Password must be at least 6 characters';
+    const newErrors = { ...formErrors };
+    if (!formFields.username.length) newErrors.username = "Please enter name";
+    if (!formFields.email.length) {
+      newErrors.email = "Please enter email address";
+    } else if (!/\S+@\S+\.\S+/.test(formFields.email)) {
+      newErrors.email = "Please enter valid email";
+    }
+    if (!formFields.password.length) {
+      newErrors.password = "Please enter password";
+    } else if (formFields.password.length < 6) {
+      newErrors.password = "Password must be at least 6 characters";
+    }
     return newErrors;
   };
 
   const handleSubmit = async (e: any) => {
     e.preventDefault();
-    try {
-      const validationErrors = validate();
-      setErrors(validationErrors);
-      if (errors.name && errors.email && errors.password) {
-        return;
-      }
-      console.log('createUserWithEmailAndPassword will called');
-      const userCredential = await createUserWithEmailAndPassword(auth, formFields.email, formFields.password);
-      const user = userCredential.user;
-      if (user) {
-        await updateProfile(user, {
-          displayName: formFields.name,
-        });
-        console.log(user);
-        navigate("/login")
-      }
-    } catch (error) {
-      console.error('Registration error:', error);
-      //const errorCode = e.code;
-      //const errorMessage = error.message;
-      //console.log(errorCode, errorMessage);
+    setError("");
+    setSuccess("");
+    const validationErrors = validate();
+    setFormErrors(validationErrors);
+    if (formFields.username.length < 1 && formFields.email.length < 1) {
+      return;
     }
-  }
+    try {
+      const response = await registerUser(formFields);
+      console.log("Registration response:", response);
+      setSuccess(response.message || "User registered successfully");
+      setFormFields({ username: "", email: "", password: "" });
+      //navigate("/login");
+    } catch (error: any) {
+      console.error("Registration error:", error);
+      const message =
+        error?.response?.data?.message ||
+        error?.message ||
+        "Something went wrong";
+      setError(message);
+    }
+  };
   return (
-    <div className='signup-container'>
-      <div className='signup-wrapper'>
+    <div className="signup-container">
+      <div className="signup-wrapper">
         <h1>Sign Up</h1>
-        <div className='signup-form'>
+        <div className="signup-form">
+          {error && <p style={{ color: "red" }}>❌ {error}</p>}
+          {success && <p style={{ color: "green" }}>✅ {success}</p>}
           <form onSubmit={handleSubmit}>
             <InputField
               type="input"
-              name="name"
-              placeholder="Name"
-              value={formFields.name}
-              error={errors.name}
+              name="username"
+              placeholder="Username"
+              value={formFields.username}
+              error={formErrors.username}
               handleChange={handleChange}
             />
             <InputField
@@ -75,7 +88,7 @@ const SignupPage = () => {
               name="email"
               placeholder="Email Address"
               value={formFields.email}
-              error={errors.email}
+              error={formErrors.email}
               handleChange={handleChange}
             />
             <InputField
@@ -83,16 +96,15 @@ const SignupPage = () => {
               name="password"
               placeholder="Password"
               value={formFields.password}
-              error={errors.password}
+              error={formErrors.password}
               handleChange={handleChange}
             />
-            <Button
-              title='Sign Up'
-              type='submit'
-            />
+            <Button title="Sign Up" type="submit" />
           </form>
         </div>
-        <p className='login-text'>Already have account <Link to="/login">Log In</Link></p>
+        <p className="login-text">
+          Already have account <Link to="/login">Log In</Link>
+        </p>
       </div>
     </div>
   );

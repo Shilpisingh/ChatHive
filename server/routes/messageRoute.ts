@@ -1,12 +1,14 @@
-const {
-  allMessages,
-  sendMessage,
-} = require("../controllers/messageControllers");
-import { protect } from "../middleware/authMiddleware";
+import express from "express";
+import { getMessagesByChatId } from "../controllers/messageControllers";
+import { RequestHandler } from "express";
+import { authenticate } from "../middleware/authMiddleware";
 
 const router = express.Router();
 
-router.route("/:chatId").get(protect, allMessages);
-router.route("/").post(protect, sendMessage);
+router.get(
+  "/:chatId",
+  authenticate as RequestHandler,
+  getMessagesByChatId as RequestHandler
+);
 
-module.exports = router;
+export default router;

@@ -1,13 +1,13 @@
-import React from 'react';
-import { BrowserRouter, Route, Routes } from 'react-router-dom';
-import HomePage from './pages/HomePage';
-import LoginPage from './pages/LoginPage';
-import ChatPage from './pages/ChatPage';
-import SignupPage from './pages/SignUpPage';
-import ProtectedRoute from './router/ProtectedRoute';
-import AuthProvider from './provider/AuthProvider';
-import PublicRoute from './router/PublicRoute';
-import NotFound from './pages/NotFound';
+import React from "react";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
+import HomePage from "./pages/HomePage";
+import LoginPage from "./pages/LoginPage";
+import ChatPage from "./pages/ChatPage";
+import SignupPage from "./pages/SignUpPage";
+import ProtectedRoute from "./router/ProtectedRoute";
+import AuthProvider from "./context/AuthProvider";
+import PublicRoute from "./router/PublicRoute";
+import NotFound from "./pages/NotFound";
 //[TODO] == error boundary
 
 function App() {

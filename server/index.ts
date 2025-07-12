@@ -1,43 +1,53 @@
-import express from 'express';
-//import mongoDBConnect from './db/connection.js';
-//import mongoose from 'mongoose';
-import bodyParser from 'body-parser';
-import cors from 'cors';
+import express from "express";
+import mongoDBConnect from "./db/connection";
+import mongoose from "mongoose";
+import bodyParser from "body-parser";
+import cors from "cors";
 //import userRoutes from './routes/user.js';
 //import chatRoutes from './routes/chat.js';
 //import messageRoutes from './routes/message.js';
-import dotenv from 'dotenv';
-import * as Server from 'socket.io';
-import setupSocket from './socket/socketHandler';
+import dotenv from "dotenv";
+import * as Server from "socket.io";
+import setupSocket from "./socket/socketHandler";
+import userRoutes from "./routes/userRoutes";
+import chatRoutes from "./routes/chatRoute";
+import messageRoutes from "./routes/messageRoute";
 
 dotenv.config();
 const app = express();
+const allowedOrigins = [process.env.BASE_URL, "http://localhost:3000"].filter(
+  (origin): origin is string => typeof origin === "string"
+);
+
 const corsConfig = {
-  origin: [process.env.BASE_URL, 'http://localhost:3000'],
+  origin: allowedOrigins,
   credentials: true,
-  methods: 'GET, POST, PATCH, DELETE',
+  methods: "GET, POST, PATCH, DELETE",
   allowedHeaders:
-    'Origin, X-Requested-With, Content-Type, Accept, Authorization',
+    "Origin, X-Requested-With, Content-Type, Accept, Authorization",
 };
 const PORT = process.env.PORT || 8000;
 const MONGO_URI = process.env.MONGO_URI;
 if (!MONGO_URI) {
-  console.error('MONGO_URI is not defined in environment variables');
+  console.error("MONGO_URI is not defined in environment variables");
   process.exit(1);
 }
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-//app.use(cors(corsConfig));
-//app.use('/', userRoutes);
-//app.use('/api/chat', chatRoutes);
-//app.use('/api/message', messageRoutes);
+app.use(cors(corsConfig));
 
-//mongoose.set('strictQuery', false);
-//mongoDBConnect(MONGO_URI); 
+// Connect to MongoDB
+mongoose.set("strictQuery", false);
+mongoDBConnect(MONGO_URI);
 
-app.get('/', (_, res) => {
-  res.send('Server is running with Socket.IO + MongoDB + TypeScript');
+//add routes
+app.get("/", (_, res) => {
+  res.send("Server is running with Socket.IO + MongoDB + TypeScript");
 });
+
+app.use("/api/users", userRoutes);
+app.use("/api/chat", chatRoutes);
+app.use("/api/message", messageRoutes);
 
 const server = app.listen(PORT, () => {
   console.log(`Server Listening at PORT - ${PORT}`);
@@ -52,8 +62,8 @@ const io = new Server.Server(server, {
 });
 
 // Socket.io connection
-setupSocket(io)
+setupSocket(io);
 
-io.on('disconnect', () => {
-  console.log('User Disconnected');
+io.on("disconnect", () => {
+  console.log("User Disconnected");
 });

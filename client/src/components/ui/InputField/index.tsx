@@ -1,19 +1,26 @@
-import React from 'react';
-import './styles.scss';
+import React from "react";
+import "./styles.scss";
 
 type InputFieldType = {
-  name: string
-  type: string
-  placeholder: string
-  value: string
-  error: string
-  handleChange: (name: string, value: string) => void
-}
+  name: string;
+  type: string;
+  placeholder: string;
+  value: string;
+  error: string;
+  handleChange: (name: string, value: string) => void;
+};
 
-const InputField = ({ name, type, placeholder, value, error, handleChange} : InputFieldType) => {
+const InputField = ({
+  name,
+  type,
+  placeholder,
+  value,
+  error,
+  handleChange,
+}: InputFieldType) => {
   return (
-    <div className='form-content'>
-      <div className='form-field'>
+    <div className="form-content">
+      <div className="form-field">
         <input
           type={type}
           name={name}
@@ -22,7 +29,7 @@ const InputField = ({ name, type, placeholder, value, error, handleChange} : Inp
           onChange={(e) => handleChange(e.target.name, e.target.value)}
         />
       </div>
-      {error && <p className='error'>{error}</p>}
+      {error && <p className="error">{error}</p>}
     </div>
   );
 };
