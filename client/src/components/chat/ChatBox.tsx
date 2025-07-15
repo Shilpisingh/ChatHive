@@ -2,6 +2,7 @@ import React, { useContext, useEffect, useState } from "react";
 import { useAuth } from "../../context/AuthProvider";
 import { ChatType } from "./types";
 import { getMessagesByChatId } from "../../api/chatService";
+import pic from "../../assets/images/pic.jpg";
 import {
   connectSocket,
   disconnectSocket,
@@ -23,7 +24,6 @@ const ChatBox = ({ chat }: { chat: ChatType }) => {
     joinChat(chat._id);
 
     onMessageReceived((msg) => {
-      console.log("Message received:========================", msg);
       setMessages((prev) => [...prev, msg]);
     });
 
@@ -69,8 +69,19 @@ const ChatBox = ({ chat }: { chat: ChatType }) => {
     setMessages((prevMessages) => [...prevMessages, messageData]);
   };
 
+  const addConnection = () => {
+    //[TODO] Implement logic to add a connection
+    console.log("Add connection clicked");
+  };
+
+  // If no chat is selected, show a message
   if (!chat || !chat.members.length) {
-    return <div className="chat">Select a user to start messaging</div>;
+    return (
+      <div className="chat">
+        Select a user to start messaging
+        <button onClick={addConnection}>Add Connections</button>
+      </div>
+    );
   }
 
   return (
@@ -86,7 +97,7 @@ const ChatBox = ({ chat }: { chat: ChatType }) => {
             key={message._id}
           >
             <div className="messageInfo">
-              <img src={message.senderAvatar || ""} alt="" />
+              <img src={message.sender.avatar || pic} alt="" />
               <span>{new Date(message.createdAt).toLocaleTimeString()}</span>
             </div>
             <div className="messageContent">

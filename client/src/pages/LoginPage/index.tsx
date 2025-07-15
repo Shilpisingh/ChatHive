@@ -1,7 +1,5 @@
 import React, { useState } from "react";
-import { signInWithEmailAndPassword } from "firebase/auth";
 import { Link, useNavigate } from "react-router-dom";
-import { auth } from "../../firebase";
 import "./styles.scss";
 import Button from "../../components/ui/Button";
 import InputField from "../../components/ui/InputField";
@@ -16,7 +14,7 @@ const LoginPage = () => {
     email: "",
     password: "",
   });
-  const [errors, setErrors] = useState("");
+  const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const navigate = useNavigate();
 
@@ -35,7 +33,7 @@ const LoginPage = () => {
 
   const handleSubmit = async (e: any) => {
     e.preventDefault();
-    setErrors("");
+    setError("");
     setSuccess("");
     const validationErrors = validate();
     setFormErrors(validationErrors);
@@ -45,14 +43,14 @@ const LoginPage = () => {
     try {
       const response = await loginUser(formFields);
       if (!response || !response.token) {
-        setErrors("Invalid email or password");
+        setError("Invalid email or password");
         return;
       }
       localStorage.setItem("token", response.token); // save token
       localStorage.setItem("user", JSON.stringify(response.user));
+      navigate("/home");
       setSuccess("Login successful!");
       setFormFields({ email: "", password: "" });
-      navigate("/home");
     } catch (error) {
       console.log("error");
     }
@@ -62,8 +60,11 @@ const LoginPage = () => {
     <div className="login-container">
       <div className="login-wrapper">
         <h1>Login</h1>
+        <p></p>
         <div className="login-form">
-          <form onSubmit={handleSubmit}>
+          {error && <p style={{ color: "red" }}>❌ {error}</p>}
+          {success && <p style={{ color: "green" }}>✅ {success}</p>}
+          <form onSubmit={handleSubmit} encType="multipart/form-data">
             <InputField
               type="email"
               name="email"

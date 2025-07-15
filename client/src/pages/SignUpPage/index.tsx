@@ -6,6 +6,7 @@ import Button from "../../components/ui/Button";
 import { registerUser } from "../../api/userService";
 
 const SignupPage = () => {
+  const [file, setFile] = useState<File | null>(null);
   const [formFields, setFormFields] = useState({
     username: "",
     email: "",
@@ -52,8 +53,18 @@ const SignupPage = () => {
     if (formFields.username.length < 1 && formFields.email.length < 1) {
       return;
     }
+    if (Object.values(validationErrors).some((error) => error.length > 0)) {
+      return;
+    }
+    const formData = new FormData();
+    formData.append("username", formFields.username);
+    formData.append("email", formFields.email);
+    formData.append("password", formFields.password);
+    if (file) {
+      formData.append("avatar", file);
+    }
     try {
-      const response = await registerUser(formFields);
+      const response = await registerUser(formData);
       console.log("Registration response:", response);
       setSuccess(response.message || "User registered successfully");
       setFormFields({ username: "", email: "", password: "" });
@@ -67,6 +78,14 @@ const SignupPage = () => {
       setError(message);
     }
   };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setFile(e.target.files[0]);
+      setFormErrors({ ...formErrors });
+    }
+  };
+
   return (
     <div className="signup-container">
       <div className="signup-wrapper">
@@ -98,6 +117,15 @@ const SignupPage = () => {
               value={formFields.password}
               error={formErrors.password}
               handleChange={handleChange}
+            />
+            <label htmlFor="avatar">Profile Image (optional):</label>
+            <input
+              type="file"
+              accept="image/*"
+              id="avatar"
+              name="avatar"
+              style={{ display: "none" }}
+              onChange={handleFileChange}
             />
             <Button title="Sign Up" type="submit" />
           </form>

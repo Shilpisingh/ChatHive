@@ -1,8 +1,6 @@
 import { Request, Response } from "express";
 import Chat from "../models/chatModel";
 import mongoose from "mongoose"; // Import mongoose to use ObjectId;
-import Message from "../models/messageModel";
-const ObjectId = mongoose.Types.ObjectId;
 
 // POST /api/chat/one-to-one
 export const accessOrCreateChat = async (req: Request, res: Response) => {
@@ -16,9 +14,11 @@ export const accessOrCreateChat = async (req: Request, res: Response) => {
     // 1. Check if chat already exists between both users
     let chat = await Chat.findOne({
       members: { $all: [userId, contactId] },
-    })
-      .populate("users", "-password")
-      .populate("latestMessage");
+    }).populate({
+      path: "members",
+      match: { _id: { $ne: userId } }, // get only the other user
+      select: "_id, username email avatar", // customize as needed
+    });
 
     console.log("Accessing chat for users:", chat);
     if (chat) return res.status(200).json(chat);
@@ -29,9 +29,15 @@ export const accessOrCreateChat = async (req: Request, res: Response) => {
       members: [userId, contactId],
     });
 
-    console.log("craete chat for users:", chat);
+    const fullChat = await Chat.findOne({
+      members: { $all: [userId, contactId] },
+    }).populate({
+      path: "members",
+      match: { _id: { $ne: userId } }, // get only the other user
+      select: "_id, username email avatar", // customize as needed
+    });
 
-    const fullChat = chat.populate("users", "-password");
+    console.log("craete fullchat for users:", fullChat);
     res.status(201).json(fullChat);
   } catch (error) {
     res.status(500).json({ message: "Failed to access or create chat", error });
@@ -49,7 +55,7 @@ export const getAllUserChats = async (req: Request, res: Response) => {
       .populate({
         path: "members",
         match: { _id: { $ne: userId } }, // get only the other user
-        select: "username email", // customize as needed
+        select: "_id, username email avatar", // customize as needed
       })
       .sort({ updatedAt: -1 });
 

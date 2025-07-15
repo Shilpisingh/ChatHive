@@ -7,12 +7,11 @@ interface RegisterData {
   password: string;
 }
 
-export const registerUser = async (data: RegisterData) => {
+export const registerUser = async (data: FormData) => {
   const response = await axiosInstance.post("/users/register", data);
   return response.data;
 };
 
-// You can add login or getProfile similarly:
 //@param data - The login credentials
 //@resurns - JSON response with token and user info
 export const loginUser = async (data: { email: string; password: string }) => {
@@ -39,8 +38,9 @@ export const getUserById = async (id: string) => {
 };
 
 // Get all users
-export const getAllUsers = async () => {
-  const response = await axiosInstance.get("/users");
+export const getAllUsers = async (q?: string) => {
+  const url = q ? `/users/?q=${q}` : "/users/";
+  const response = await axiosInstance.get(url);
   return response.data;
 };
 

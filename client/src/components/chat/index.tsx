@@ -13,7 +13,6 @@ const Chat = () => {
   const [chats, setChat] = React.useState<ChatType[]>([]);
   const [selectedChat, setSelectedChat] = React.useState<ChatType>({
     _id: "",
-    sender: "",
     members: [],
   });
 
@@ -32,18 +31,21 @@ const Chat = () => {
     fetchChat();
   }, [user]);
 
-  const updateContactList = (contactId: string, username: string) => {
+  const updateContactList = async (contactId: string) => {
     // Handle adding contact as a friend
     console.log("Adding contact ID:", contactId);
     try {
-      const response = createConnection(contactId);
+      const response = await createConnection(contactId);
       if (!response) {
         console.error("Failed to create connection");
         return;
       }
       setChat((prevContacts) => [
         ...prevContacts,
-        { _id: contactId, username, avatar: "" },
+        {
+          _id: response?._id,
+          members: response?.members,
+        },
       ]);
     } catch (error) {
       console.error("Error creating connection:", error);

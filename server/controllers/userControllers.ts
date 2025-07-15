@@ -3,29 +3,70 @@ import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import User from "../models/userModel";
+import { uploadFileToS3 } from "../middleware/uploadMiddleware";
+import multer from "multer";
+
+const upload = multer({ storage: multer.memoryStorage() }).single("avatar");
 
 // register user
 export const registerUser = async (req: Request, res: Response) => {
-  try {
+  upload(req, res, async (err) => {
+    if (err) return res.status(400).json({ error: "Upload error" });
     const { username, email, password } = req.body;
+    console.log("Registering user:", req.body);
+    let avatar = "";
+    console.log("Avatar file:", avatar);
     // Check if user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ message: "User already exists" });
     }
-    // Create new user
-    const hashedPassword = await bcrypt.hash(password, 10);
-    await User.create({
-      username,
-      email,
-      password: hashedPassword,
-    });
-    res
-      .status(201)
-      .json({ message: "User registered", user: { username, email } });
-  } catch (error) {
-    res.status(500).json({ message: "Error registering user", error });
-  }
+    if (!username || !email || !password) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
+    if (password.length < 6) {
+      return res
+        .status(400)
+        .json({ message: "Password must be at least 6 characters" });
+    }
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ message: "Invalid email format" });
+    }
+    try {
+      if (req.file) {
+        // Validate avatar file type (if needed)
+        /*const allowedTypes = /jpeg|jpg|png|gif/;
+        if (!allowedTypes.test(avatar.split(".").pop()!.toLowerCase())) {
+          return res.status(400).json({ message: "Invalid avatar file type" });
+        }*/
+
+        avatar = await uploadFileToS3(
+          req.file.buffer,
+          req.file.originalname,
+          req.file.mimetype
+        );
+        if (!avatar) {
+          return res.status(500).json({ message: "Failed to upload avatar" });
+        }
+        console.log("Avatar aws file:", avatar);
+      }
+      // Create new user
+      const hashedPassword = await bcrypt.hash(password, 10);
+      await User.create({
+        username,
+        email,
+        password: hashedPassword,
+        avatar,
+      });
+      res
+        .status(201)
+        .json({ message: "User registered", user: { username, email } });
+    } catch (error) {
+      res.status(500).json({ message: "Error registering user", error });
+    }
+  });
 };
 
 // Login user
@@ -34,6 +75,7 @@ export const registerUser = async (req: Request, res: Response) => {
 export const loginUser = async (req: Request, res: Response) => {
   const { email, password } = req.body;
   try {
+    console.log("Login attempt for email:", req.body);
     const user = await User.findOne({ email });
     if (!user) return res.status(404).json({ message: "User not found" });
 
@@ -46,7 +88,12 @@ export const loginUser = async (req: Request, res: Response) => {
 
     res.status(200).json({
       token,
-      user: { id: user._id, email: user.email, username: user.username },
+      user: {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+        avatar: user.avatar,
+      },
     });
   } catch (err) {
     res.status(500).json({ message: "Login failed", error: err });
@@ -57,22 +104,20 @@ export const loginUser = async (req: Request, res: Response) => {
 export const getAllUsers = async (req: Request, res: Response) => {
   try {
     const userId = req.user?.id;
+    const searchQuery = "";
+    if (searchQuery) {
+      const regex = new RegExp(searchQuery, "i");
+      const users = await User.find({
+        _id: { $ne: userId },
+        $or: [{ username: regex }, { email: regex }],
+      }).select("-password");
+      res.status(200).json(users);
+      return;
+    }
     const users = await User.find({ _id: { $ne: userId } }).select("-password");
     res.status(200).json(users);
   } catch (error) {
     res.status(500).json({ message: "Error fetching users", error });
-  }
-};
-
-// Get user by ID
-export const getUserById = async (req: Request, res: Response) => {
-  try {
-    const user = await User.findById(req.params.id).select("-__v");
-    if (!user) return res.status(404).json({ message: "User not found" });
-
-    res.status(200).json(user);
-  } catch (error) {
-    res.status(500).json({ message: "Error fetching user", error });
   }
 };
 

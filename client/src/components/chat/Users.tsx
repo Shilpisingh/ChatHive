@@ -8,7 +8,7 @@ import { Contact } from "./types";
 const Users = ({
   updateContactList,
 }: {
-  updateContactList: (id: string, name: string) => void;
+  updateContactList: (id: string) => void;
 }) => {
   const { user } = useAuth();
   const [loading, setLoading] = React.useState(true);
@@ -60,9 +60,7 @@ const Users = ({
             <img src={contact.avatar || pic} alt={contact.username} />
             <div className="userChatInfo">
               <span>{contact.username}</span>
-              <button
-                onClick={() => updateContactList(contact._id, contact.username)}
-              >
+              <button onClick={() => updateContactList(contact._id)}>
                 Add Friend
               </button>
             </div>

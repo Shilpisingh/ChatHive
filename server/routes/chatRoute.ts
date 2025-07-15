@@ -19,6 +19,4 @@ router.post(
   accessOrCreateChat as RequestHandler
 );
 
-//router.get("/:id", getUserById);
-
 export default router;

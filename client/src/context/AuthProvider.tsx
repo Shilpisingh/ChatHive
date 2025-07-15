@@ -1,14 +1,9 @@
 import { useContext, createContext, useState, useEffect } from "react";
 import React from "react";
-
-type User = {
-  id: string;
-  username: string;
-  email: string;
-};
+import { UserType } from "../components/chat/types";
 
 type AuthContextType = {
-  user: User | null;
+  user: UserType | null;
   loading: boolean;
   logout: () => void;
 };
@@ -22,7 +17,7 @@ const AuthContext = createContext<AuthContextType>({
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<UserType | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

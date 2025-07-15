@@ -1,11 +1,27 @@
-import React, { ReactNode } from "react";
+import React from "react";
+import Box from "@mui/material/Box";
+import Toolbar from "@mui/material/Toolbar";
+import Header from "../components/Header";
+import Sidebar from "../components/Sidebar";
 
-const MainLayout = ({ children }: { children: ReactNode }) => {
+const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return (
-    <div>
-      <div style={{ paddingBottom: 10 }}>DashboardLayout</div>
-      <div>{children}</div>
-    </div>
+    <Box sx={{ display: "flex" }}>
+      <Header />
+      <Sidebar />
+      <Box
+        component="main"
+        sx={{
+          flexGrow: 1,
+          p: 3,
+          marginLeft: "240px",
+        }}
+      >
+        <Toolbar />
+        {children}
+      </Box>
+    </Box>
   );
-}
+};
+
 export default MainLayout;
