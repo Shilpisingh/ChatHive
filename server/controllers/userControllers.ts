@@ -77,10 +77,14 @@ export const loginUser = async (req: Request, res: Response) => {
   try {
     console.log("Login attempt for email:", req.body);
     const user = await User.findOne({ email });
-    if (!user) return res.status(404).json({ message: "User not found" });
+    if (!user)
+      return res
+        .status(404)
+        .json({ message: "Please enter valid email address" });
 
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(400).json({ message: "Invalid password" });
+    if (!isMatch)
+      return res.status(404).json({ message: "Please enter valid credentail" });
 
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET!, {
       expiresIn: "12h",
@@ -104,6 +108,10 @@ export const loginUser = async (req: Request, res: Response) => {
 export const getAllUsers = async (req: Request, res: Response) => {
   try {
     const userId = req.user?.id;
+    if (!userId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    const userOjectId = mongoose.Types.ObjectId(userId);
     const searchQuery = "";
     if (searchQuery) {
       const regex = new RegExp(searchQuery, "i");
@@ -115,7 +123,20 @@ export const getAllUsers = async (req: Request, res: Response) => {
       return;
     }
     const users = await User.find({ _id: { $ne: userId } }).select("-password");
-    res.status(200).json(users);
+    if (!users || users.length === 0) {
+      return res.status(404).json({ message: "No users found" });
+    }
+    const updatedUser = users.map((user) => ({
+      _id: user._id,
+      username: user.username,
+      email: user.email,
+      avatar: user.avatar,
+      isOnline: user.isOnline,
+      isFriend: user.friends.includes(userOjectId),
+      isRequestSent: user.friendRequestsSent.includes(userOjectId),
+      isRequestReceived: user.friendRequestsReceived.includes(userOjectId),
+    }));
+    res.status(200).json(updatedUser);
   } catch (error) {
     res.status(500).json({ message: "Error fetching users", error });
   }

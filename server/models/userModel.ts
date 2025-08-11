@@ -1,4 +1,4 @@
-import mongoose, { Document, Schema } from "mongoose";
+import mongoose, { Document, Schema, Types } from "mongoose";
 
 export interface IUser extends Document {
   username: string;
@@ -7,6 +7,9 @@ export interface IUser extends Document {
   avatar?: string;
   isOnline: boolean;
   lastSeen: Date;
+  friends: Types.ObjectId[];
+  friendRequestsSent: Types.ObjectId[];
+  friendRequestsReceived: Types.ObjectId[];
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -19,6 +22,9 @@ const UserSchema = new Schema<IUser>(
     avatar: { type: String },
     isOnline: { type: Boolean, default: false },
     lastSeen: { type: Date, default: Date.now },
+    friends: [{ type: Schema.Types.ObjectId, ref: "User" }],
+    friendRequestsSent: [{ type: Schema.Types.ObjectId, ref: "User" }],
+    friendRequestsReceived: [{ type: Schema.Types.ObjectId, ref: "User" }],
   },
   { timestamps: true }
 );

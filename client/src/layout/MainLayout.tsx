@@ -6,21 +6,19 @@ import Sidebar from "../components/Sidebar";
 
 const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return (
-    <Box sx={{ display: "flex" }}>
+    <>
       <Header />
-      <Sidebar />
       <Box
         component="main"
         sx={{
+          mt: 8,
           flexGrow: 1,
           p: 3,
-          marginLeft: "240px",
         }}
       >
-        <Toolbar />
         {children}
       </Box>
-    </Box>
+    </>
   );
 };
 

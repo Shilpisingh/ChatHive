@@ -1,9 +1,18 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "./styles.scss";
-import InputField from "../../components/ui/InputField";
-import Button from "../../components/ui/Button";
 import { registerUser } from "../../api/userService";
+import {
+  Avatar,
+  Box,
+  Button,
+  Container,
+  IconButton,
+  Paper,
+  TextField,
+  Typography,
+} from "@mui/material";
+import { PhotoCamera } from "@mui/icons-material";
 
 const SignupPage = () => {
   const [file, setFile] = useState<File | null>(null);
@@ -41,21 +50,17 @@ const SignupPage = () => {
     } else if (formFields.password.length < 6) {
       newErrors.password = "Password must be at least 6 characters";
     }
-    return newErrors;
+    console.log("Form errors:", newErrors);
+    setFormErrors(newErrors);
+    return Object.values(newErrors).every((e) => !e);
   };
 
   const handleSubmit = async (e: any) => {
     e.preventDefault();
     setError("");
     setSuccess("");
-    const validationErrors = validate();
-    setFormErrors(validationErrors);
-    if (formFields.username.length < 1 && formFields.email.length < 1) {
-      return;
-    }
-    if (Object.values(validationErrors).some((error) => error.length > 0)) {
-      return;
-    }
+
+    if (!validate()) return;
     const formData = new FormData();
     formData.append("username", formFields.username);
     formData.append("email", formFields.email);
@@ -87,54 +92,86 @@ const SignupPage = () => {
   };
 
   return (
-    <div className="signup-container">
-      <div className="signup-wrapper">
-        <h1>Sign Up</h1>
-        <div className="signup-form">
-          {error && <p style={{ color: "red" }}>❌ {error}</p>}
-          {success && <p style={{ color: "green" }}>✅ {success}</p>}
-          <form onSubmit={handleSubmit}>
-            <InputField
-              type="input"
-              name="username"
-              placeholder="Username"
-              value={formFields.username}
-              error={formErrors.username}
-              handleChange={handleChange}
-            />
-            <InputField
-              type="email"
-              name="email"
-              placeholder="Email Address"
-              value={formFields.email}
-              error={formErrors.email}
-              handleChange={handleChange}
-            />
-            <InputField
-              type="password"
-              name="password"
-              placeholder="Password"
-              value={formFields.password}
-              error={formErrors.password}
-              handleChange={handleChange}
-            />
-            <label htmlFor="avatar">Profile Image (optional):</label>
+    <Container maxWidth="sm">
+      <Paper elevation={3} sx={{ p: 4, mt: 6, borderRadius: 3 }}>
+        <Typography variant="h5" fontWeight={600} textAlign="center" mb={3}>
+          Sign Up
+        </Typography>
+        {error && (
+          <Typography color="error" mb={2} textAlign="center">
+            {error}
+          </Typography>
+        )}
+        {success && <Typography color="success">✅ {success}</Typography>}
+        <Box
+          component="form"
+          onSubmit={handleSubmit}
+          display="flex"
+          flexDirection="column"
+          gap={2}
+          noValidate
+        >
+          <TextField
+            label="Name"
+            required
+            fullWidth
+            value={formFields.username}
+            error={!!formErrors.username}
+            helperText={formErrors.username}
+            onChange={(e) => handleChange("username", e.target.value)}
+          />
+          <TextField
+            type="email"
+            label="Email"
+            required
+            fullWidth
+            value={formFields.email}
+            error={!!formErrors.email}
+            helperText={formErrors.email}
+            onChange={(e) => handleChange("email", e.target.value)}
+          />
+          <TextField
+            type="password"
+            label="Password"
+            required
+            fullWidth
+            value={formFields.password}
+            error={!!formErrors.password}
+            helperText={formErrors.password}
+            onChange={(e) => handleChange("password", e.target.value)}
+          />
+          <Button variant="outlined" component="label">
+            <IconButton
+              component="span"
+              color="primary"
+              aria-label="upload picture"
+            >
+              <PhotoCamera />
+            </IconButton>
+            Upload Profile Photo (optional)
             <input
               type="file"
               accept="image/*"
-              id="avatar"
-              name="avatar"
-              style={{ display: "none" }}
+              hidden
               onChange={handleFileChange}
             />
-            <Button title="Sign Up" type="submit" />
-          </form>
-        </div>
-        <p className="login-text">
-          Already have account <Link to="/login">Log In</Link>
-        </p>
-      </div>
-    </div>
+          </Button>
+
+          <Button
+            type="submit"
+            variant="contained"
+            fullWidth
+            size="large"
+            sx={{ mt: 2, borderRadius: 2 }}
+          >
+            Register
+          </Button>
+        </Box>
+        <Typography variant="body2" align="center" mt={2}>
+          Already have an account? <Link to="/login">Login</Link>
+        </Typography>
+      </Paper>
+    </Container>
   );
 };
 

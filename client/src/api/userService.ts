@@ -39,7 +39,7 @@ export const getUserById = async (id: string) => {
 
 // Get all users
 export const getAllUsers = async (q?: string) => {
-  const url = q ? `/users/?q=${q}` : "/users/";
+  const url = q ? `/users/?q=${q}` : "/users";
   const response = await axiosInstance.get(url);
   return response.data;
 };

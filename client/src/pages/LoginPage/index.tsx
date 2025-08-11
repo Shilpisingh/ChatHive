@@ -1,9 +1,14 @@
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import "./styles.scss";
-import Button from "../../components/ui/Button";
-import InputField from "../../components/ui/InputField";
+import { useNavigate } from "react-router-dom";
 import { loginUser } from "../../api/userService";
+import {
+  Box,
+  Container,
+  Paper,
+  TextField,
+  Typography,
+  Button,
+} from "@mui/material";
 
 const LoginPage = () => {
   const [formFields, setFormFields] = useState({
@@ -15,7 +20,6 @@ const LoginPage = () => {
     password: "",
   });
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
   const navigate = useNavigate();
 
   const handleChange = (name: string, value: string) => {
@@ -34,7 +38,6 @@ const LoginPage = () => {
   const handleSubmit = async (e: any) => {
     e.preventDefault();
     setError("");
-    setSuccess("");
     const validationErrors = validate();
     setFormErrors(validationErrors);
     if (formFields.email.length < 1 && formFields.password.length < 1) {
@@ -48,47 +51,68 @@ const LoginPage = () => {
       }
       localStorage.setItem("token", response.token); // save token
       localStorage.setItem("user", JSON.stringify(response.user));
-      navigate("/home");
-      setSuccess("Login successful!");
+      window.location.reload();
       setFormFields({ email: "", password: "" });
     } catch (error) {
-      console.log("error");
+      setError("Login failed. Please try again.");
+      //console.log("error", error.response.data.message);
     }
   };
 
   return (
-    <div className="login-container">
-      <div className="login-wrapper">
-        <h1>Login</h1>
-        <p></p>
-        <div className="login-form">
-          {error && <p style={{ color: "red" }}>❌ {error}</p>}
-          {success && <p style={{ color: "green" }}>✅ {success}</p>}
-          <form onSubmit={handleSubmit} encType="multipart/form-data">
-            <InputField
-              type="email"
-              name="email"
-              placeholder="Email Address"
-              value={formFields.email}
-              error={formErrors.email}
-              handleChange={handleChange}
-            />
-            <InputField
-              type="password"
-              name="password"
-              placeholder="Password"
-              value={formFields.password}
-              error={formErrors.password}
-              handleChange={handleChange}
-            />
-            <Button title="Log In" type="submit" />
-          </form>
-        </div>
-        <p className="signup-text">
-          Already have account <Link to="/signup">Sign Up</Link>
-        </p>
-      </div>
-    </div>
+    <Container maxWidth="sm">
+      <Paper elevation={3} sx={{ p: 4, mt: 8, borderRadius: 3 }}>
+        <Typography variant="h5" fontWeight={600} textAlign="center" mb={3}>
+          Login to Your Account
+        </Typography>
+        {error && (
+          <Typography color="error" mb={2} textAlign="center">
+            {error}
+          </Typography>
+        )}
+        <Box
+          component="form"
+          onSubmit={handleSubmit}
+          display="flex"
+          flexDirection="column"
+          gap={2}
+        >
+          <TextField
+            type="email"
+            label="Email"
+            variant="outlined"
+            required
+            fullWidth
+            value={formFields.email}
+            error={!!formErrors.email}
+            onChange={(e) => handleChange("email", e.target.value)}
+          />
+          <TextField
+            type="password"
+            label="Password"
+            variant="outlined"
+            required
+            fullWidth
+            value={formFields.password}
+            error={!!formErrors.password}
+            onChange={(e) => handleChange("password", e.target.value)}
+          />
+          <Button
+            type="submit"
+            variant="contained"
+            fullWidth
+            size="large"
+            sx={{ mt: 2, borderRadius: 2 }}
+            onClick={handleSubmit}
+          >
+            Login
+          </Button>
+        </Box>
+        <Typography variant="body2" align="center" mt={2}>
+          Don't have an account? <a href="/signup">Register</a>
+        </Typography>
+      </Paper>
+    </Container>
   );
 };
 

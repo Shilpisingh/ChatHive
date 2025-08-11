@@ -25,7 +25,7 @@ export type MessageType = {
 };
 
 export type UserType = {
-  _id: string;
+  id: string;
   username: string;
   email: string;
   avatar?: string;

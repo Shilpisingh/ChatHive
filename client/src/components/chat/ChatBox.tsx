@@ -47,7 +47,6 @@ const ChatBox = ({ chat }: { chat: ChatType }) => {
 
   // Function to send a message
   const sendMessage = () => {
-    console.log("Sending message:", chat._id, content, user);
     setError("");
     if (!content.trim()) return;
     if (!chat._id || !user?.id) {
@@ -93,7 +92,9 @@ const ChatBox = ({ chat }: { chat: ChatType }) => {
       <div className="messages">
         {messages.map((message) => (
           <div
-            className={`message ${message.sender === user?._id ? "owner" : ""}`}
+            className={`message ${
+              message.sender._id === user?.id ? "owner" : ""
+            }`}
             key={message._id}
           >
             <div className="messageInfo">

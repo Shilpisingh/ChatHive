@@ -5,7 +5,7 @@ import ListItem from "@mui/material/ListItem";
 import ListItemText from "@mui/material/ListItemText";
 import Divider from "@mui/material/Divider";
 import Toolbar from "@mui/material/Toolbar";
-
+import { Link } from "react-router-dom";
 const drawerWidth = 240;
 
 const Sidebar: React.FC = () => {
@@ -24,11 +24,11 @@ const Sidebar: React.FC = () => {
       <Toolbar />
       <Divider />
       <List>
-        {["Home", "Profile", "Messages", "Settings"].map((text) => (
-          <ListItem button key={text}>
-            <ListItemText primary={text} />
-          </ListItem>
-        ))}
+        <ListItem>
+          <Link to="/">Home</Link>
+          <Link to="/profile">Profile</Link>
+          <Link to="/chat">Chat</Link>
+        </ListItem>
       </List>
     </Drawer>
   );

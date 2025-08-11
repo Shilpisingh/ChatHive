@@ -5,7 +5,7 @@ export const getAllChats = async () => {
   return response.data;
 };
 
-export const createConnection = async (contactId: string) => {
+export const createChatConnection = async (contactId: string) => {
   const response = await axiosInstance.post("/chat/create", { contactId });
   return response.data;
 };

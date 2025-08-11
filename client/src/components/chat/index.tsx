@@ -2,10 +2,10 @@ import React, { useEffect } from "react";
 import Sidebar from "./SideBar";
 import ChatBox from "./ChatBox";
 import { useAuth } from "../../context/AuthProvider";
-import Users from "./Users";
 import { Contact, ChatType } from "./types";
-import { getAllUsers } from "../../api/userService";
-import { createConnection, getAllChats } from "../../api/chatService";
+import { createChatConnection, getAllChats } from "../../api/chatService";
+import { Box } from "@mui/material";
+import { useParams } from "react-router-dom";
 
 const Chat = () => {
   const { user } = useAuth();
@@ -15,6 +15,7 @@ const Chat = () => {
     _id: "",
     members: [],
   });
+  const { id: friendId } = useParams();
 
   useEffect(() => {
     // Fetch users
@@ -23,6 +24,19 @@ const Chat = () => {
       try {
         const chats = await getAllChats();
         setChat(chats);
+        // Set the first chat as selected if available
+        let chat = selectedChat;
+        if (friendId) {
+          const friendChat = chats.find(
+            (chat: ChatType) => chat.members[0]._id === friendId
+          );
+          if (friendChat) {
+            chat = friendChat;
+          }
+        } else if (chats.length > 0) {
+          chat = chats[0];
+        }
+        setSelectedChat(chat);
         setLoading(false);
       } catch (error) {
         console.error("Error fetching user's chat:", error);
@@ -31,37 +45,18 @@ const Chat = () => {
     fetchChat();
   }, [user]);
 
-  const updateContactList = async (contactId: string) => {
-    // Handle adding contact as a friend
-    console.log("Adding contact ID:", contactId);
-    try {
-      const response = await createConnection(contactId);
-      if (!response) {
-        console.error("Failed to create connection");
-        return;
-      }
-      setChat((prevContacts) => [
-        ...prevContacts,
-        {
-          _id: response?._id,
-          members: response?.members,
-        },
-      ]);
-    } catch (error) {
-      console.error("Error creating connection:", error);
-    }
-  };
-
   return (
-    <div className="container">
-      <Sidebar
-        chats={chats}
-        loading={loading}
-        setSelectedChat={setSelectedChat}
-      />
-      <ChatBox chat={selectedChat} />
-      <Users updateContactList={updateContactList} />
-    </div>
+    <Box className="container">
+      <>
+        <Sidebar
+          chats={chats}
+          loading={loading}
+          setSelectedChat={setSelectedChat}
+          selectedChat={selectedChat}
+        />
+        <ChatBox chat={selectedChat} />
+      </>
+    </Box>
   );
 };
 

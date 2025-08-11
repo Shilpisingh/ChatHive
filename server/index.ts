@@ -3,15 +3,13 @@ import mongoDBConnect from "./db/connection";
 import mongoose from "mongoose";
 import bodyParser from "body-parser";
 import cors from "cors";
-//import userRoutes from './routes/user.js';
-//import chatRoutes from './routes/chat.js';
-//import messageRoutes from './routes/message.js';
 import dotenv from "dotenv";
 import * as Server from "socket.io";
 import setupSocket from "./socket/socketHandler";
 import userRoutes from "./routes/userRoutes";
 import chatRoutes from "./routes/chatRoute";
 import messageRoutes from "./routes/messageRoute";
+import friendRoute from "./routes/friendRoute";
 
 dotenv.config();
 const app = express();
@@ -46,6 +44,7 @@ app.get("/", (_, res) => {
 });
 
 app.use("/api/users", userRoutes);
+app.use("/api/friend", friendRoute);
 app.use("/api/chat", chatRoutes);
 app.use("/api/message", messageRoutes);
 
